@@ -6,8 +6,11 @@ on:
   workflow_dispatch:
     inputs:
       days:
-        description: "Days of history to fetch (use 90 for a first backfill)"
+        description: "Days of history to fetch (use 90 for a backfill)"
         default: "7"
+      find:
+        description: "Optional: list every play containing this artist/title text (for checking)"
+        default: ""
 
 permissions:
   contents: write
@@ -27,7 +30,15 @@ jobs:
       - run: pip install -r requirements.txt
 
       - name: Fetch spins
-        run: python spins.py --days ${{ github.event.inputs.days || '2' }}
+        env:
+          DAYS: ${{ github.event.inputs.days || '2' }}
+          FIND: ${{ github.event.inputs.find }}
+        run: |
+          if [ -n "$FIND" ]; then
+            python spins.py --days "$DAYS" --find "$FIND"
+          else
+            python spins.py --days "$DAYS"
+          fi
 
       - name: Save results
         run: |
