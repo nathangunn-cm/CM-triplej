@@ -118,19 +118,47 @@ def fetch_window(station: str, start: datetime, end: datetime) -> list[dict]:
         batch = data.get("items") or []
         items.extend(batch)
         offset += len(batch)
-        if not batch or offset >= (data.get("total") or 0):
+        total = data.get("total")
+        if not batch or (total is not None and offset >= total) or (total is None and len(batch) < PAGE_SIZE):
             return items
-        time.sleep(0.4)
+        time.sleep(0.25)
+
+
+WINDOW_HOURS = 3  # ~45 plays per window on triple j, well under one 100-play page
 
 
 def fetch_plays(station: str, days: int) -> list[dict]:
-    """Fetch day by day so no single query pages too deep."""
+    """Fetch in short windows so completeness never depends on deep paging."""
     end = datetime.now(timezone.utc)
-    out = []
-    for d in range(days, 0, -1):
-        s = end - timedelta(days=d)
-        out.extend(fetch_window(station, s, s + timedelta(days=1)))
+    start = end - timedelta(days=days)
+    out, seen = [], set()
+    t = start
+    while t < end:
+        t2 = min(t + timedelta(hours=WINDOW_HOURS), end)
+        for it in fetch_window(station, t, t2):
+            k = (it.get("played_time"), (it.get("recording") or {}).get("title"))
+            if k not in seen:  # windows can share a boundary play
+                seen.add(k)
+                out.append(it)
+        t = t2
     return out
+
+
+def find_report(items: list[dict], station: str, text: str, roster: list[dict]) -> None:
+    """Print every play whose artist or title contains `text`, matched or not."""
+    target = norm(text)
+    rows = []
+    for it in items:
+        rec = it.get("recording") or {}
+        artists, title = play_artists(it), rec.get("title") or ""
+        if target and target in norm(" ".join(artists) + " " + title) and it.get("played_time"):
+            when = datetime.fromisoformat(it["played_time"].replace("Z", "+00:00")).astimezone(TZ)
+            counted = bool(match_plays([it], station, roster))
+            rows.append((when, f"{when:%a %d %b %Y %H:%M}  {', '.join(artists)} – {title}  "
+                               f"[{'COUNTED' if counted else 'NOT on roster / not matched'}]"))
+    print(f"\n--- {LABELS.get(station, station)}: {len(rows)} plays containing '{text}' ---")
+    for _, line in sorted(rows):
+        print("  " + line)
 
 
 def play_artists(item: dict) -> list[str]:
@@ -306,6 +334,7 @@ def main():
     ap.add_argument("--email", action="store_true")
     ap.add_argument("--dry-run-email", action="store_true")
     ap.add_argument("--skip-fetch", action="store_true", help="rebuild outputs from saved history only")
+    ap.add_argument("--find", default="", help="list every play whose artist/title contains this text")
     args = ap.parse_args()
 
     roster = load_roster()
@@ -315,8 +344,12 @@ def main():
         for st in CONFIG["stations"]:
             items = fetch_plays(st, args.days)
             hits = match_plays(items, st, roster)
-            print(f"{LABELS.get(st, st)}: scanned {len(items)} plays, {len(hits)} roster spins")
+            print(f"{LABELS.get(st, st)}: scanned {len(items)} plays over {args.days} days "
+                  f"(~{len(items) / max(args.days, 1):.0f}/day), {len(hits)} roster spins")
+            if args.find:
+                find_report(items, st, args.find, roster)
             new.extend(hits)
+            del items
     plays = merge_history(new)
     fetched_from = None if args.skip_fetch else datetime.now(timezone.utc) - timedelta(days=args.days)
     write_dashboard_data(plays, roster, fetched_from)
