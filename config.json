@@ -1,0 +1,6 @@
+{
+  "stations": ["triplej", "doublej", "unearthed"],
+  "station_labels": {"triplej": "triple j", "doublej": "Double J", "unearthed": "Unearthed"},
+  "timezone": "Australia/Melbourne",
+  "report_days": 7
+}
