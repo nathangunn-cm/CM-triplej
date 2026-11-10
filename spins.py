@@ -87,8 +87,9 @@ def load_roster() -> list[dict]:
     with open(ROOT / "roster.csv", newline="", encoding="utf-8-sig") as f:
         for r in csv.DictReader(f):
             artist, track = (r.get("artist") or "").strip(), (r.get("track") or "").strip()
+            group = (r.get("group") or "").strip()
             if artist and track:
-                rows.append({"artist": artist, "track": track, "key": norm_title(track)})
+                rows.append({"artist": artist, "track": track, "group": group, "key": norm_title(track)})
     return rows
 
 
@@ -188,14 +189,29 @@ def merge_history(new: list[dict]) -> list[dict]:
     return plays
 
 
-def write_dashboard_data(plays: list[dict], roster: list[dict]) -> None:
+def write_dashboard_data(plays: list[dict], roster: list[dict], fetched_from: datetime | None) -> None:
+    """tracking_since = earliest moment the feed has been scanned, kept across runs,
+    so the dashboard knows when a 'previous period' comparison is complete."""
+    since = []
+    if DASH_DATA.exists():
+        try:
+            old = json.loads(DASH_DATA.read_text()).get("tracking_since")
+            if old:
+                since.append(datetime.fromisoformat(old))
+        except ValueError:
+            pass
+    if fetched_from:
+        since.append(fetched_from)
+    if plays:
+        since.append(datetime.fromisoformat(plays[0]["played_time"]))
     DASH_DATA.parent.mkdir(exist_ok=True)
     DASH_DATA.write_text(json.dumps({
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "tracking_since": min(since).isoformat() if since else None,
         "timezone": CONFIG.get("timezone"),
         "stations": CONFIG["stations"],
         "station_labels": LABELS,
-        "roster": [{"artist": r["artist"], "track": r["track"]} for r in roster],
+        "roster": [{"artist": r["artist"], "track": r["track"], "group": r["group"]} for r in roster],
         "plays": plays,
     }, ensure_ascii=False))
 
@@ -302,7 +318,8 @@ def main():
             print(f"{LABELS.get(st, st)}: scanned {len(items)} plays, {len(hits)} roster spins")
             new.extend(hits)
     plays = merge_history(new)
-    write_dashboard_data(plays, roster)
+    fetched_from = None if args.skip_fetch else datetime.now(timezone.utc) - timedelta(days=args.days)
+    write_dashboard_data(plays, roster, fetched_from)
 
     if args.email or args.dry_run_email:
         subject, html, text = build_email(plays, roster)
