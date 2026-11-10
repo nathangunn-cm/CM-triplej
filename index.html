@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Roster radio spins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #edf0f2; --surface: #ffffff; --ink: #19222b; --muted: #5d6b78; --line: #d3dae0;
+  --triplej: #2f55e4; --doublej: #d68d00; --unearthed: #1e9e6a; --other: #8a5cd6;
+  --focus: #2f55e4;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #12171c; --surface: #1a2128; --ink: #e8edf1; --muted: #93a1ae; --line: #2c3640;
+    --triplej: #7a93ff; --doublej: #f2b23a; --unearthed: #3cc48c; --other: #b394f0;
+    --focus: #7a93ff;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: "Archivo", "Helvetica Neue", Arial, sans-serif; font-size: 15px; line-height: 1.45;
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+}
+main { max-width: 1120px; margin: 0 auto; padding: 32px 20px 64px; }
+
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+h1 { font-stretch: 75%; font-weight: 800; font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1; margin: 0; letter-spacing: -0.01em; }
+.updated { color: var(--muted); font-size: 0.85rem; margin: 6px 0 0; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 24px 0 18px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: none; color: var(--ink); font: inherit; font-size: 0.9rem; padding: 6px 14px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.station-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; cursor: pointer; user-select: none; }
+.station-toggle input { accent-color: var(--ink); }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+input[type="search"] {
+  font: inherit; font-size: 0.9rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); min-width: 200px; margin-left: auto;
+}
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* the broadcast tape: one tick per spin across the period */
+.tape-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 18px 10px; }
+.tape-head { display: flex; flex-wrap: wrap; gap: 4px 20px; align-items: baseline; margin-bottom: 10px; }
+.tape-head strong { font-stretch: 75%; font-size: 2rem; font-weight: 800; line-height: 1; }
+.tape-head span { color: var(--muted); }
+.tape { width: 100%; height: 64px; display: block; }
+.tape-axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.75rem; margin-top: 4px; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 22px; }
+.table-scroll { overflow-x: auto; }
+th { text-align: left; font-weight: 600; color: var(--muted); font-size: 0.8rem; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr.track { cursor: pointer; }
+tr.track:hover td { background: color-mix(in srgb, var(--surface) 70%, var(--line)); }
+.t-title { font-weight: 600; }
+.t-artist { color: var(--muted); font-size: 0.88rem; }
+td.total { font-stretch: 75%; font-weight: 800; font-size: 1.25rem; }
+td.zero { color: var(--line); }
+.mini { width: 220px; height: 22px; display: block; }
+.last { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+tr.log td { background: var(--surface); padding: 0 10px 14px; }
+.log-list { list-style: none; margin: 0; padding: 10px 0 0; columns: 2 280px; column-gap: 24px; font-size: 0.86rem; }
+.log-list li { display: flex; gap: 8px; align-items: center; padding: 3px 0; break-inside: avoid; }
+.log-list .when { font-variant-numeric: tabular-nums; min-width: 150px; }
+.log-list .as { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+details.silent { margin-top: 26px; color: var(--muted); }
+details.silent summary { cursor: pointer; font-weight: 600; }
+details.silent ul { columns: 2 260px; padding-left: 18px; }
+.note { color: var(--muted); font-size: 0.8rem; margin-top: 36px; max-width: 70ch; }
+.empty { padding: 28px 10px; color: var(--muted); }
+
+@media (max-width: 720px) {
+  .mini-col { display: none; }
+  input[type="search"] { margin-left: 0; width: 100%; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Roster radio spins</h1>
+      <p class="updated" id="updated">Loading play data…</p>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Period" id="period">
+      <button data-days="7" aria-pressed="true">7 days</button>
+      <button data-days="28" aria-pressed="false">28 days</button>
+      <button data-days="90" aria-pressed="false">90 days</button>
+      <button data-days="0" aria-pressed="false">All</button>
+    </div>
+    <div id="stations" style="display:flex;gap:14px;flex-wrap:wrap"></div>
+    <input type="search" id="q" placeholder="Filter artist or track" aria-label="Filter artist or track">
+  </div>
+
+  <section class="tape-wrap" aria-label="All roster spins in this period">
+    <div class="tape-head"><strong id="sum">–</strong><span id="sumtext"></span></div>
+    <svg class="tape" id="tape" viewBox="0 0 1000 64" preserveAspectRatio="none" role="img"></svg>
+    <div class="tape-axis"><span id="ax0"></span><span id="ax1"></span></div>
+  </section>
+
+  <div class="table-scroll">
+    <table>
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <details class="silent" id="silent"><summary></summary><ul></ul></details>
+
+  <p class="note">Source: ABC’s play-history feed, the same log behind the “recently played” lists on the triple j site. Plays aired off vinyl or CD, mostly late-night specialist shows, may not be logged. Times are shown in <span id="tzname">Melbourne</span> time.</p>
+</main>
+
+<script>
+(() => {
+  const COLORS = { triplej: "var(--triplej)", doublej: "var(--doublej)", unearthed: "var(--unearthed)" };
+  const col = s => COLORS[s] || "var(--other)";
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  let data, days = 7, active = new Set(), query = "", open = new Set();
+  let tz = "Australia/Melbourne";
+
+  const fmt = (d, opts) => new Intl.DateTimeFormat("en-AU", { timeZone: tz, ...opts }).format(d);
+  const fmtWhen = d => fmt(d, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+  const key = p => p.artist + " || " + p.track;
+
+  async function load() {
+    try {
+      const r = await fetch("data.json", { cache: "no-store" });
+      if (!r.ok) throw new Error(r.status);
+      data = await r.json();
+    } catch (e) {
+      document.getElementById("updated").textContent = "Couldn’t load data.json. Check that the weekly job has run at least once.";
+      return;
+    }
+    tz = data.timezone || tz;
+    document.getElementById("tzname").textContent = tz.split("/").pop().replace("_", " ");
+    data.plays.forEach(p => p.t = new Date(p.played_time));
+    data.stations.forEach(s => active.add(s));
+    document.getElementById("updated").textContent =
+      "Updated " + fmtWhen(new Date(data.generated_at)) + " · " + data.roster.length + " tracks tracked";
+    const box = document.getElementById("stations");
+    box.innerHTML = data.stations.map(s =>
+      `<label class="station-toggle"><input type="checkbox" checked data-s="${esc(s)}"><span class="dot" style="background:${col(s)}"></span>${esc(data.station_labels[s] || s)}</label>`).join("");
+    box.addEventListener("change", e => {
+      const s = e.target.dataset.s; e.target.checked ? active.add(s) : active.delete(s); render();
+    });
+    render();
+  }
+
+  function render() {
+    const now = new Date(data.generated_at);
+    const earliest = data.plays.length ? data.plays[0].t : now;
+    const start = days ? new Date(now - days * 864e5) : earliest;
+    const span = Math.max(now - start, 1);
+    const q = query.trim().toLowerCase();
+    const stations = data.stations.filter(s => active.has(s));
+    const plays = data.plays.filter(p => p.t >= start && active.has(p.station) &&
+      (!q || (p.artist + " " + p.track).toLowerCase().includes(q)));
+
+    // tape
+    const x = t => ((t - start) / span) * 1000;
+    let svg = "";
+    const dayMs = 864e5, step = (span / dayMs) > 60 ? 7 * dayMs : dayMs;
+    for (let t = Math.ceil(start / step) * step; t < now; t += step)
+      svg += `<line x1="${x(t)}" x2="${x(t)}" y1="0" y2="64" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+    const lane = 64 / Math.max(stations.length, 1);
+    plays.forEach(p => {
+      const i = stations.indexOf(p.station);
+      svg += `<rect x="${x(p.t) - 1}" y="${i * lane + 3}" width="2.2" height="${lane - 6}" fill="${col(p.station)}"><title>${esc(p.artist)} – ${esc(p.track)}, ${esc(fmtWhen(p.t))}</title></rect>`;
+    });
+    document.getElementById("tape").innerHTML = svg;
+    document.getElementById("ax0").textContent = fmt(start, { day: "numeric", month: "short", year: days ? undefined : "numeric" });
+    document.getElementById("ax1").textContent = fmt(now, { day: "numeric", month: "short" });
+
+    // rows
+    const rows = new Map();
+    data.roster.forEach(r => rows.set(key(r), { ...r, plays: [] }));
+    plays.forEach(p => rows.has(key(p)) ? rows.get(key(p)).plays.push(p) : rows.set(key(p), { artist: p.artist, track: p.track, plays: [p] }));
+    let list = [...rows.values()].filter(r => !q || (r.artist + " " + r.track).toLowerCase().includes(q));
+    const played = list.filter(r => r.plays.length).sort((a, b) => b.plays.length - a.plays.length || a.artist.localeCompare(b.artist));
+    const silent = list.filter(r => !r.plays.length).sort((a, b) => a.artist.localeCompare(b.artist));
+
+    document.getElementById("sum").textContent = plays.length;
+    document.getElementById("sumtext").textContent =
+      `spin${plays.length === 1 ? "" : "s"} across ${played.length} track${played.length === 1 ? "" : "s"}, ` +
+      (days ? `last ${days} days` : "since tracking began");
+
+    document.getElementById("thead").innerHTML = `<tr><th>Track</th>${stations.map(s =>
+      `<th class="num"><span class="dot" style="background:${col(s)}"></span> ${esc(data.station_labels[s] || s)}</th>`).join("")}
+      <th class="num">Total</th><th class="mini-col">Spread</th><th>Last spin</th></tr>`;
+
+    const lastEver = r => data.plays.filter(p => key(p) === key(r)).reduce((m, p) => p.t > m ? p.t : m, null);
+    document.getElementById("tbody").innerHTML = played.length ? played.map(r => {
+      const k = key(r), isOpen = open.has(k);
+      const counts = stations.map(s => { const n = r.plays.filter(p => p.station === s).length;
+        return `<td class="num ${n ? "" : "zero"}">${n || "0"}</td>`; }).join("");
+      const mini = r.plays.map(p => `<rect x="${x(p.t) - 2}" y="${stations.indexOf(p.station) * (22 / stations.length)}" width="4" height="${22 / stations.length}" fill="${col(p.station)}"/>`).join("");
+      const last = lastEver(r);
+      let html = `<tr class="track" tabindex="0" data-k="${esc(k)}" aria-expanded="${isOpen}">
+        <td><div class="t-title">${esc(r.track)}</div><div class="t-artist">${esc(r.artist)}</div></td>
+        ${counts}<td class="num total">${r.plays.length}</td>
+        <td class="mini-col"><svg class="mini" viewBox="0 0 1000 22" preserveAspectRatio="none" aria-hidden="true">${mini}</svg></td>
+        <td class="last">${last ? esc(fmtWhen(last)) : "–"}</td></tr>`;
+      if (isOpen) {
+        const items = [...r.plays].sort((a, b) => b.t - a.t).map(p =>
+          `<li><span class="dot" style="background:${col(p.station)}"></span><span class="when">${esc(fmtWhen(p.t))}</span><span class="as" title="${esc(p.logged_as || "")}">${esc(p.logged_as || "")}</span></li>`).join("");
+        html += `<tr class="log"><td colspan="${stations.length + 4}"><ul class="log-list">${items}</ul></td></tr>`;
+      }
+      return html;
+    }).join("") : `<tr><td class="empty" colspan="${stations.length + 4}">No roster spins in this period. Try a longer period or switch on more stations.</td></tr>`;
+
+    const det = document.getElementById("silent");
+    det.hidden = !silent.length;
+    det.querySelector("summary").textContent = `No spins in this period (${silent.length})`;
+    det.querySelector("ul").innerHTML = silent.map(r => `<li>${esc(r.artist)} – ${esc(r.track)}</li>`).join("");
+  }
+
+  const toggle = row => { const k = row.dataset.k; open.has(k) ? open.delete(k) : open.add(k); render(); };
+  document.getElementById("tbody").addEventListener("click", e => { const row = e.target.closest("tr.track"); if (row) toggle(row); });
+  document.getElementById("tbody").addEventListener("keydown", e => {
+    const row = e.target.closest("tr.track"); if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggle(row); }
+  });
+  document.getElementById("period").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    days = +b.dataset.days;
+    document.querySelectorAll("#period button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    render();
+  });
+  document.getElementById("q").addEventListener("input", e => { query = e.target.value; render(); });
+  load();
+})();
+</script>
+</body>
+</html>
