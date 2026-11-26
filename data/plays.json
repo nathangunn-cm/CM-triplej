@@ -5409,5 +5409,54 @@
   "artist": "Lucky",
   "track": "Take It",
   "logged_as": "Lucky – Take It"
+ },
+ {
+  "station": "triplej",
+  "played_time": "2026-11-25T08:14:16+00:00",
+  "artist": "Teen Jesus and the Jean Teasers",
+  "track": "GO WASTE MY TIME",
+  "logged_as": "Teen Jesus and the Jean Teasers – GO WASTE MY TIME"
+ },
+ {
+  "station": "unearthed",
+  "played_time": "2026-11-25T09:14:31+00:00",
+  "artist": "Lara Buchanan",
+  "track": "Only Once",
+  "logged_as": "Lara Buchanan – Only Once"
+ },
+ {
+  "station": "triplej",
+  "played_time": "2026-11-25T16:15:34+00:00",
+  "artist": "Lucky",
+  "track": "Take It",
+  "logged_as": "Lucky – Take It"
+ },
+ {
+  "station": "unearthed",
+  "played_time": "2026-11-25T22:48:57+00:00",
+  "artist": "daezy",
+  "track": "I WANT YOU",
+  "logged_as": "Daezy – I WANT YOU"
+ },
+ {
+  "station": "triplej",
+  "played_time": "2026-11-25T22:50:49+00:00",
+  "artist": "Teen Jesus and the Jean Teasers",
+  "track": "GO WASTE MY TIME",
+  "logged_as": "Teen Jesus and the Jean Teasers – GO WASTE MY TIME"
+ },
+ {
+  "station": "triplej",
+  "played_time": "2026-11-26T01:06:29+00:00",
+  "artist": "Lara Buchanan",
+  "track": "Only Once",
+  "logged_as": "Lara Buchanan – Only Once"
+ },
+ {
+  "station": "unearthed",
+  "played_time": "2026-11-26T01:48:39+00:00",
+  "artist": "The Good Kids",
+  "track": "No Parks (At The Beach)",
+  "logged_as": "The Good Kids – No Parks (at the Beach)"
  }
 ]
